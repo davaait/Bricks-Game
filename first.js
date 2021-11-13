@@ -1,32 +1,30 @@
 let canvas = document.getElementById("myCanvas");
 let ctx = canvas.getContext("2d");
 
-let background = new Image();
-background.src =
-
 let score = 0;
 let lives = 3;
+let levels = 1;
 
 let x = canvas.width / 2;
 let y = canvas.height - 30;
-let ballRadius = 10;
+let ballRadius = 15;
 
-let paddleHeight = 10;
-let paddleWidth = 75;
+let paddleHeight = 20;
+let paddleWidth = 110;
 let paddleX = (canvas.width - paddleWidth) / 2;
 
 let rightPressed = false;
 let leftPressed = false;
 
-let dx = 2;
-let dy = -2;
+let dx = 4;
+let dy = -5;
 
 let brickRowCount = 5;
-let brickColumnCount = 10;
-let brickWidth = 65;
-let brickHeight = 20;
+let brickColumnCount = 8;
+let brickWidth = 85;
+let brickHeight = 25;
 let brickPadding = 10;
-let brickOffsetTop = 30;
+let brickOffsetTop = 55;
 let brickOffsetLeft = 20;
 
 let bricks = [];
@@ -84,30 +82,51 @@ function collisionDetection() {
 }
 
 function drawScore() {
-    ctx.font = "16px Arial";
-    ctx.fillStyle = "#0095DD";
-    ctx.fillText("Score: " + score, 8, 20);
+    const imagePoints = new Image(80,70);
+    imagePoints.src = 'images/point-1.png';
+    ctx.drawImage(imagePoints, 20, 10);
+    ctx.font = "30px Road Rage";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(`${score}`, 65, 35);
 }
 
 function drawLives() {
-    ctx.font = "16px Arial";
-    ctx.fillStyle = "#0095DD";
-    ctx.fillText("Lives: " + lives, canvas.width - 65, 20);
+    const imageLives = new Image(10,10);
+    imageLives.src = 'images/heart.png';
+    ctx.drawImage(imageLives, canvas.width - 75, 10);
+    ctx.font = "30px Road Rage";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(`${lives}`, canvas.width - 35, 35);
+}
+
+function drawLevels() {
+    const imageLevels = new Image(10,10);
+    imageLevels.src = 'images/level.png';
+    ctx.drawImage(imageLevels, canvas.width/2 - 17, 10);
+    ctx.font = "30px Road Rage";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(`${levels}`, canvas.width/2 + 20, 35);
 }
 
 function drawBall() {
     ctx.beginPath();
     ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
-    ctx.fillStyle = "#0095DD";
+    ctx.fillStyle = "#e0dc29"
     ctx.fill();
+    ctx.strokeStyle = "#001ddd";
+    ctx.lineWidth = 5;
+    ctx.stroke();
     ctx.closePath();
 }
 
 function drawPaddle() {
     ctx.beginPath();
-    ctx.rect(paddleX, canvas.height - paddleHeight, paddleWidth, paddleHeight);
+    ctx.rect(paddleX - 2.5, canvas.height - paddleHeight - 2.5, paddleWidth, paddleHeight);
     ctx.fillStyle = "#0095DD";
     ctx.fill();
+    ctx.strokeStyle = "#001ddd";
+    ctx.lineWidth = 5;
+    ctx.stroke();
     ctx.closePath();
 }
 
@@ -123,6 +142,10 @@ function drawBricks() {
                 ctx.rect(brickX, brickY, brickWidth, brickHeight);
                 ctx.fillStyle = "#0095DD";
                 ctx.fill();
+                ctx.lineWidth = 20
+                ctx.strokeStyle = "#001ddd";
+                ctx.lineWidth = 5;
+                ctx.stroke();
                 ctx.closePath();
             }
         }
@@ -136,16 +159,15 @@ function draw() {
     drawPaddle();
     drawScore();
     drawLives();
+    drawLevels();
     collisionDetection();
-    if (x + dx > canvas.width || x + dx < ballRadius) {
+    if (x + ballRadius > canvas.width || x + dx < ballRadius) {
         dx = -dx;
-        ctx.fillStyle = '#' + (0x1000000 + (Math.random()) * 0xffffff).toString(16).substr(1, 6);
-        ctx.fill();
     }
     if (y + dy < ballRadius) {
         dy = -dy;
     } else if (y + dy > canvas.height - ballRadius) {
-        if (x > paddleX && x < paddleX + paddleWidth) {
+        if (x > paddleX + 2.5 && x < paddleX + paddleWidth + 2.5) {
             dy = -dy;
         } else {
             lives--;
@@ -155,13 +177,14 @@ function draw() {
             } else {
                 x = canvas.width / 2;
                 y = canvas.height - 30;
-                dx = 3;
-                dy = -3;
+                levels++;
+                dx = 5 + levels ;
+                dy = -3 - levels;
                 paddleX = (canvas.width - paddleWidth) / 2;
             }
         }
     }
-    if (rightPressed && paddleX < canvas.width - paddleWidth) {
+    if (rightPressed && paddleX < canvas.width - paddleWidth - 2.5) {
         paddleX += 7;
     } else if (leftPressed && paddleX > 0) {
         paddleX -= 7;
