@@ -1,8 +1,11 @@
 * {
+    font-family: "Road Rage";
+    font-size: 35px;
     padding: 0;
     margin: 0;
     background-color: #ee5522;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 200 200'%3E%3Cdefs%3E%3ClinearGradient id='a' gradientUnits='userSpaceOnUse' x1='100' y1='33' x2='100' y2='-3'%3E%3Cstop offset='0' stop-color='%23000' stop-opacity='0'/%3E%3Cstop offset='1' stop-color='%23000' stop-opacity='1'/%3E%3C/linearGradient%3E%3ClinearGradient id='b' gradientUnits='userSpaceOnUse' x1='100' y1='135' x2='100' y2='97'%3E%3Cstop offset='0' stop-color='%23000' stop-opacity='0'/%3E%3Cstop offset='1' stop-color='%23000' stop-opacity='1'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg fill='%23d23d09' fill-opacity='0.6'%3E%3Crect x='100' width='100' height='100'/%3E%3Crect y='100' width='100' height='100'/%3E%3C/g%3E%3Cg fill-opacity='0.5'%3E%3Cpolygon fill='url(%23a)' points='100 30 0 0 200 0'/%3E%3Cpolygon fill='url(%23b)' points='100 100 0 130 0 100 200 100 200 130'/%3E%3C/g%3E%3C/svg%3E");
+    background-image: url("https://png.pngtree.com/background/20210706/original/pngtree-simple-atmospheric-lighting-brick-taobao-poster-background-picture-image_150584.jpg");
+    background-size: 100% 120%;
 }
 
 canvas {
@@ -17,6 +20,26 @@ canvas {
     margin: 35px auto;
 }
 
+#to_menu {
+    background: transparent;
+    width: 50px;
+    cursor: pointer;
+    position: absolute;
+    top: 130px;
+    left: 180px;
+    display: block;
+}
+
+#max {
+    background: transparent;
+    width: 50px;
+    cursor: pointer;
+    position: absolute;
+    top: 200px;
+    left: 180px;
+    display: block;
+}
+
 #sound {
     background: transparent;
     width: 30px;
@@ -27,34 +50,51 @@ canvas {
     left: 315px;
 }
 
-#gameover{
+#gameover {
+    border-radius: 15px 15px 0 0;
     position: absolute;
-    width : 400px;
-    height: 500px;
-    background: rgba(0,0,0,0.5);
-    display: none;
-}
-#youwin{
-    width: 100px;
-    position: absolute;
-    top : 300px;
-    left : 285px;
-    display: none;
-}
-#youlose{
-    width:400px;
-    position: absolute;
-    top: 100px;
-    left : 0px;
+    width: 795px;
+    height: 550px;
+    top: 36px;
+    left: 285px;
+    background: rgba(0, 0, 0, 0.5);
     display: none;
 }
 
-#restart{
+#win {
     background: transparent;
     position: absolute;
-    top: 375px;
-    left : 630px;
+    top: 40px;
+    left: 240px;
+    font-size: 1.55em;
+    color: rgb(255, 255, 255);
+    display: none;
+}
+
+#youwin {
+    background: transparent;
+    width: 250px;
+    position: absolute;
+    top: 80px;
+    left: 280px;
+    display: none;
+}
+
+#youlose {
+    background: transparent;
+    width: 400px;
+    position: absolute;
+    top: 80px;
+    left: 200px;
+    display: none;
+}
+
+#restart {
+    background: transparent;
+    position: absolute;
+    top: 400px;
+    left: 340px;
     cursor: pointer;
     font-size: 1.55em;
-    color : rgba(13, 173, 17, 0.94);
+    color: rgb(255, 255, 255);
 }

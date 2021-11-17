@@ -1,23 +1,24 @@
 // SELECT CANVAS ELEMENT
 let canvas = document.getElementById("myCanvas");
 let ctx = canvas.getContext("2d");
+ctx.lineWidth = 3;
 
 // GAME VARIABLES AND CONSTANTS
-const paddleWidth = 110;
-const paddleMarginBottom = 20;
-const paddleHeight = 20;
-const ballRadius = 10;
-let life = 5;
+let paddleWidth = 110;
+let paddleMarginBottom = 20;
+let paddleHeight = 20;
+let ballRadius = 12;
+let life = 3;
 let score = 0;
-const scoreStep = 10;
+let scoreStep = 10;
 let level = 1;
 let maxLevels = 3;
 let game_over = false;
-let leftArrow = false;
-let rightArrow = false;
+let rightPressed = false;
+let leftPressed = false;
 
 // CREATE THE PADDLE
-const paddle = {
+let paddle = {
     x: canvas.width / 2 - paddleWidth / 2,
     y: canvas.height - paddleMarginBottom - paddleHeight,
     width: paddleWidth,
@@ -34,37 +35,48 @@ function drawPaddle() {
 }
 
 // CONTROL THE PADDLE
-document.addEventListener("keydown", function (e) {
-    if (e.keyCode === 37) {
-        leftArrow = true;
-    } else if (e.keyCode === 39) {
-        rightArrow = true;
-    }
-});
+document.addEventListener("keydown", keyDownHandler, false);
+document.addEventListener("keyup", keyUpHandler, false);
+document.addEventListener("mousemove", mouseMoveHandler, false);
 
-document.addEventListener("keyup", function (e) {
-    if (e.keyCode === 37) {
-        leftArrow = false;
-    } else if (e.keyCode === 39) {
-        rightArrow = false;
+function mouseMoveHandler(e) {
+    let relativeX = e.clientX - canvas.offsetLeft;
+    if (relativeX > 0 && relativeX < canvas.width) {
+        paddle.x = relativeX - paddle.width / 2;
     }
-});
+}
+
+function keyDownHandler(e) {
+    if (e.keyCode === 39) {
+        rightPressed = true;
+    } else if (e.keyCode === 37) {
+        leftPressed = true;
+    }
+}
+
+function keyUpHandler(e) {
+    if (e.keyCode === 39) {
+        rightPressed = false;
+    } else if (e.keyCode === 37) {
+        leftPressed = false;
+    }
+}
 
 // MOVE PADDLE
 function movePaddle() {
-    if (rightArrow && paddle.x + paddle.width < canvas.width) {
+    if (rightPressed && paddle.x + paddle.width < canvas.width) {
         paddle.x += paddle.dx;
-    } else if (leftArrow && paddle.x > 0) {
+    } else if (leftPressed && paddle.x > 0) {
         paddle.x -= paddle.dx;
     }
 }
 
 // CREATE THE BALL
-const ball = {
+let ball = {
     x: canvas.width / 2,
     y: paddle.y - ballRadius,
     radius: ballRadius,
-    speed: 4,
+    speed: 6,
     dx: 3 * (Math.random() * 2 - 1),
     dy: -3
 }
@@ -108,7 +120,7 @@ function ballWallCollision() {
 // RESET THE BALL
 function resetBall() {
     ball.x = canvas.width / 2;
-    ball.y = paddle.y - ballRadius;
+    ball.y = paddle.y - ball.radius;
     ball.dx = 3 * (Math.random() * 2 - 1);
     ball.dy = -3;
 }
@@ -130,13 +142,13 @@ function ballPaddleCollision() {
 }
 
 // CREATE THE BRICKS
-const brick = {
+let brick = {
     row: 4,
-    column: 8,
-    width: 85,
+    column: 7,
+    width: 95,
     height: 25,
-    offSetLeft: 20,
-    offSetTop: 55,
+    offSetLeft: 15,
+    offSetTop: 25,
     marginTop: 25,
     fillColor: "#2e3548",
     strokeColor: "#FFF"
@@ -191,184 +203,181 @@ function ballBrickCollision() {
     }
 }
 
-// show game stats
-function showGameStats(text, textX, textY, img, imgX, imgY) {
-    // draw text
-    ctx.fillStyle = "#FFF";
-    ctx.font = "25px Germania One";
-    ctx.fillText(text, textX, textY);
+function drawSound() {
+    ctx.beginPath();
+    ctx.arc(42, 25, 15, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(0,0,0,0)"
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.79)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.closePath();
+}
 
-    // draw image
-    ctx.drawImage(img, imgX, imgY, width = 25, height = 25);
+function drawScore() {
+    const imagePoints = new Image(80, 70);
+    imagePoints.src = 'images/point-1.png';
+    ctx.drawImage(imagePoints, canvas.width - 275, 10);
+    ctx.font = "30px Road Rage";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(`${score}`, canvas.width - 235, 35);
+}
+
+function drawLives() {
+    const imageLives = new Image(10, 10);
+    imageLives.src = 'images/heart.png';
+    ctx.drawImage(imageLives, canvas.width - 75, 10);
+    ctx.font = "30px Road Rage";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(`${life}`, canvas.width - 35, 35);
+}
+
+function drawLevels() {
+    const imageLevels = new Image(10, 10);
+    imageLevels.src = 'images/level.png';
+    ctx.drawImage(imageLevels, canvas.width - 175, 10);
+    ctx.font = "30px Road Rage";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(`${level}`, canvas.width - 135, 35);
 }
 
 // DRAW FUNCTION
 function draw() {
+    drawSound();
+    drawScore();
+    drawLives();
+    drawLevels();
     drawPaddle();
-
     drawBall();
-
     drawBricks();
+}
 
 // game over
-    function gameOver() {
-        if (life <= 0) {
-            showYouLose();
-            game_over = true;
-        }
+function gameOver() {
+    if (life <= 0) {
+        loseGame.play();
+        showYouLose();
+        game_over = true;
     }
+}
 
 // level up
-    function levelUp() {
-        let isLevelDone = true;
+function levelUp() {
+    let isLevelDone = true;
 
-        // check if all the bricks are broken
-        for (let r = 0; r < brick.row; r++) {
-            for (let c = 0; c < brick.column; c++) {
-                isLevelDone = isLevelDone && !bricks[r][c].status;
-            }
-        }
-
-        if (isLevelDone) {
-            win.play();
-
-            if (level >= maxLevels) {
-                showYouWin();
-                game_over = true;
-                return;
-            }
-            brick.row++;
-            createBricks();
-            ball.speed += 0.5;
-            resetBall();
-            level++;
+    // check if all the bricks are broken
+    for (let r = 0; r < brick.row; r++) {
+        for (let c = 0; c < brick.column; c++) {
+            isLevelDone = isLevelDone && !bricks[r][c].status;
         }
     }
+
+    if (isLevelDone) {
+        if (level >= maxLevels) {
+            showYouWin();
+            win_game.play();
+            game_over = true;
+            return;
+        }
+        brick.row++;
+        createBricks();
+        ball.speed += 0.7;
+        resetBall();
+        level++;
+    }
+}
 
 // UPDATE GAME FUNCTION
-    function update() {
-        drawSound();
-        drawScore();
-        drawLives();
-        drawLevels();
-        movePaddle();
-        moveBall();
-        ballWallCollision();
-        ballPaddleCollision();
-        ballBrickCollision();
-        gameOver();
-        levelUp();
-    }
+function update() {
+    movePaddle();
+    moveBall();
+    ballWallCollision();
+    ballPaddleCollision();
+    ballBrickCollision();
+    gameOver();
+    levelUp();
+}
 
 // GAME LOOP
-    function loop() {
-        // CLEAR THE CANVAS
-        let BG_IMG = new Image();
-        ctx.drawImage(BG_IMG, 0, 0);
+function loop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
         draw();
         update();
-        if (!game_over) {
-            requestAnimationFrame(loop);
-        }
+        document.addEventListener("keydown", keyDownHandler, false);
+        function keyDownHandler(e) {
+            if (e.keyCode === 32) {
+                draw();
+                update();}}
+    if (!game_over) {
+        requestAnimationFrame(loop);
     }
+}
 
-    loop();
+loop();
 
 // Audio
 
-    const wall_hit = new Audio();
-    wall_hit.src = "sounds/hit_sound.wav";
+const wall_hit = new Audio();
+wall_hit.src = "sounds/hit_sound.wav";
 
-    const life_lost = new Audio();
-    life_lost.src = "sounds/life_lost.wav";
+const life_lost = new Audio();
+life_lost.src = "sounds/life_lost.wav";
 
-    const paddle_hit = new Audio();
-    paddle_hit.src = "sounds/more_hit.mp3";
+const paddle_hit = new Audio();
+paddle_hit.src = "sounds/more_hit.mp3";
 
-    const win = new Audio();
-    win.src = "sound/game-win.wav";
+const win_game = new Audio();
+win_game.src = "sound/game-win.wav";
 
-    const brick_hit = new Audio();
-    brick_hit.src = "sounds/hit_sound.wav";
+const brick_hit = new Audio();
+brick_hit.src = "sounds/hit_sound.wav";
 
-    const loseGame = new Audio();
-    loseGame.src = "sounds/game_over.wav";
-
-    function drawSound() {
-        ctx.beginPath();
-        ctx.arc(42, 25, 15, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(0,0,0,0)"
-        ctx.fill();
-        ctx.strokeStyle = "rgba(0,0,0,0.79)";
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        ctx.closePath();
-    }
-
-    function drawScore() {
-        const imagePoints = new Image(80, 70);
-        imagePoints.src = 'images/point-1.png';
-        ctx.drawImage(imagePoints, canvas.width - 275, 10);
-        ctx.font = "30px Road Rage";
-        ctx.fillStyle = "#ffffff";
-        ctx.fillText(`${score}`, canvas.width - 235, 35);
-    }
-
-    function drawLives() {
-        const imageLives = new Image(10, 10);
-        imageLives.src = 'images/heart.png';
-        ctx.drawImage(imageLives, canvas.width - 75, 10);
-        ctx.font = "30px Road Rage";
-        ctx.fillStyle = "#ffffff";
-        ctx.fillText(`${lives}`, canvas.width - 35, 35);
-    }
-
-    function drawLevels() {
-        const imageLevels = new Image(10, 10);
-        imageLevels.src = 'images/level.png';
-        ctx.drawImage(imageLevels, canvas.width - 175, 10);
-        ctx.font = "30px Road Rage";
-        ctx.fillStyle = "#ffffff";
-        ctx.fillText(`${levels}`, canvas.width - 135, 35);
-    }
+const loseGame = new Audio();
+loseGame.src = "sounds/game_over.wav";
 
 // SELECT SOUND ELEMENT
-    const soundImg = document.getElementById('sound');
-    soundImg.addEventListener('click', audioStatus);
+const soundImg = document.getElementById('sound');
+soundImg.addEventListener('click', audioStatus);
 
-    function audioStatus() {
-        let srcImg = soundImg.getAttribute('src');
-        let sound_img = srcImg === "images/sound-on.png" ? "images/sound-off.png" : "images/sound-on.png";
+function audioStatus() {
+    let srcImg = soundImg.getAttribute('src');
+    let sound_img = srcImg === "images/sound-on.png" ? "images/sound-off.png" : "images/sound-on.png";
 
-        soundImg.setAttribute('src', sound_img);
+    soundImg.setAttribute('src', sound_img);
 
-        wall_contact.muted = wall_contact.muted ? false : true;
-        paddle_contact.muted = paddle_contact.muted ? false : true;
-        brick_contact.muted = brick_contact.muted ? false : true;
-        win.muted = win.muted ? false : true;
-        life_lost.muted = life_lost.muted ? false : true;
-    }
+    wall_hit.muted = wall_hit.muted ? false : true;
+    paddle_hit.muted = paddle_hit.muted ? false : true;
+    brick_hit.muted = brick_hit.muted ? false : true;
+    win_game.muted = win_game.muted ? true : false;
+    life_lost.muted = life_lost.muted ? false : true;
+}
 
 // SHOW GAME OVER MESSAGE
-    /* SELECT ELEMENTS */
-    const gameover = document.getElementById("gameover");
-    const youwin = document.getElementById("youwin");
-    const youlose = document.getElementById("youlose");
-    const restart = document.getElementById("restart");
+/* SELECT ELEMENTS */
+const gameover = document.getElementById("gameover");
+const youwin = document.getElementById("youwin");
+const congr = document.getElementById("win");
+const youlose = document.getElementById("youlose");
+const restart = document.getElementById("restart");
 
 // CLICK ON PLAY AGAIN BUTTON
-    restart.addEventListener("click", function () {
-        location.reload(); // reload the page
-    })
+restart.addEventListener("click", function () {
+    location.reload(); // reload the page
+})
 
 // SHOW YOU WIN
-    function showYouWin() {
-        gameover.style.display = "block";
-        youwin.style.display = "block";
-    }
+function showYouWin() {
+    gameover.style.display = "block";
+    congr.style.display = "block";
+    youwin.style.display = "block";
+}
 
-    // SHOW YOU LOSE
-    function showYouLose() {
-        gameover.style.display = "block";
-        youlose.style.display = "block";
-    }}
+// SHOW YOU LOSE
+function showYouLose() {
+    gameover.style.display = "block";
+    youlose.style.display = "block";
+}
+
+//DataBase
+
+let topPlayers = {}
