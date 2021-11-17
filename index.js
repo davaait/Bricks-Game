@@ -7,19 +7,12 @@ let lives = 3;
 let levels = 1;
 let max_levels = 3;
 
-let x = canvas.width / 2;
-let y = canvas.height - 30;
-let ballRadius = 15;
-
 let paddleHeight = 20;
 let paddleWidth = 110;
 let paddleX = (canvas.width - paddleWidth) / 2;
 
 let rightPressed = false;
 let leftPressed = false;
-
-let dx = 3 * (Math.random() * 2 - 1);
-let dy = -3;
 
 let brickRowCount = 5;
 let brickColumnCount = 8;
@@ -30,6 +23,17 @@ let brickOffsetTop = 55;
 let brickOffsetLeft = 20;
 
 let game_over = false;
+
+const ball = {
+    ballRadius: 15,
+    x: canvas.width / 2,
+    y: paddleHeight - ballRadius,
+    radius: ballRadius,
+    speed: 4,
+    dx: 3 * (Math.random() * 2 - 1),
+    dy: -3
+}
+
 
 let bricks = [];
 for (let c = 0; c < brickColumnCount; c++) {
@@ -66,7 +70,7 @@ function keyUpHandler(e) {
     }
 }
 
-function collisionDetection() {
+/*function collisionDetection() {
     for (let c = 0; c < brickColumnCount; c++) {
         for (let r = 0; r < brickRowCount; r++) {
             let b = bricks[c][r];
@@ -84,7 +88,7 @@ function collisionDetection() {
             }
         }
     }
-}
+}*/
 
 // Audio
 const wall_hit = new Audio();
@@ -114,11 +118,11 @@ function audioStatus() {
 
     soundImg.setAttribute('src', sound_img);
 
-    wall_contact.muted = wall_contact.muted ? false : true;
-    paddle_contact.muted = paddle_contact.muted ? false : true;
-    brick_contact.muted = brick_contact.muted ? false : true;
-    win.muted = win.muted ? false : true;
-    life_lost.muted = life_lost.muted ? false : true;
+    wall_contact.muted = !wall_contact.muted;
+    paddle_contact.muted = !paddle_contact.muted;
+    brick_contact.muted = !brick_contact.muted;
+    win.muted = !win.muted;
+    life_lost.muted = !life_lost.muted;
 }
 
 function drawSound() {
@@ -131,6 +135,7 @@ function drawSound() {
     ctx.stroke();
     ctx.closePath();
 }
+
 
 function drawScore() {
     const imagePoints = new Image(80, 70);
@@ -161,13 +166,42 @@ function drawLevels() {
 
 function drawBall() {
     ctx.beginPath();
-    ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(255,222,0,0.91)";
+    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+    ctx.fillStyle = "#ffcd05";
     ctx.fill();
-    ctx.strokeStyle = "rgba(0,29,221,0.85)";
-    ctx.lineWidth = 5;
+    ctx.strokeStyle = "#2e3548";
     ctx.stroke();
     ctx.closePath();
+}
+
+function moveBall() {
+    ball.x += ball.dx;
+    ball.y += ball.dy;
+}
+
+function ballWallCollision() {
+    if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
+        ball.dx = -ball.dx;
+        wall_hit.play();
+    }
+
+    if (ball.y - ball.radius < 0) {
+        ball.dy = -ball.dy;
+        wall_hit.play();
+    }
+
+    if (ball.y + ball.radius > canvas.height) {
+        lives--; // LOSE life
+        life_lost.play();
+        resetBall();
+    }
+}
+
+function resetBall() {
+    ball.x = canvas.width / 2;
+    ball.y = canvas.height - paddleHeight - 2.5 - ballRadius;
+    ball.dx = 3 * (Math.random() * 2 - 1);
+    ball.dy = -3;
 }
 
 function drawPaddle() {
@@ -179,6 +213,44 @@ function drawPaddle() {
     ctx.lineWidth = 5;
     ctx.stroke();
     ctx.closePath();
+}
+
+function ballPaddleCollision() {
+    if (ball.x < paddleX + paddleWidth && ball.x > paddleWidth && canvas.height - paddleHeight - 2.5 < canvas.height - 2.5 && ball.y > canvas.height - paddleHeight - 2.5) {
+
+        // PLAY SOUND
+        paddle_hit.play();
+
+        // CHECK WHERE THE BALL HIT THE PADDLE
+        let collidePoint = ball.x - (paddleX + paddleWidth / 2);
+
+        // NORMALIZE THE VALUES
+        collidePoint = collidePoint / (paddleWidth / 2);
+
+        // CALCULATE THE ANGLE OF THE BALL
+        let angle = collidePoint * Math.PI / 3;
+
+
+        ball.dx = ball.speed * Math.sin(angle);
+        ball.dy = -ball.speed * Math.cos(angle);
+    }
+}
+
+function ballBrickCollision() {
+    for (let r = 0; r < brickRowCount; r++) {
+        for (let c = 0; c < brickColumnCount; c++) {
+            let b = bricks[r][c];
+            // if the brick isn't broken
+            if (b.status) {
+                if (ball.x + ball.radius > b.x && ball.x - ball.radius < b.x + brickWidth && ball.y + ball.radius > b.y && ball.y - ball.radius < b.y + brickHeight) {
+                    brick_hit.play();
+                    ball.dy = -ball.dy;
+                    b.status = false; // the brick is broken
+                    score += scoreStep;
+                }
+            }
+        }
+    }
 }
 
 function drawBricks() {
@@ -222,21 +294,37 @@ function showYouLose() {
     youlose.style.display = "block";
 }
 
-function showYouLose() {
-    gameover.style.display = "block";
-    youlose.style.display = "block";
-}
-
 function gameOver() {
     if (lives <= 0) {
         showYouLose();
-        loseGame.play();
         game_over = true;
     }
 }
 
 function levelUp() {
-    let levelIsDone = true;
+    let isLevelDone = true;
+
+    // check if all the bricks are broken
+    for (let r = 0; r < brickRowCount; r++) {
+        for (let c = 0; c < brickColumnCount; c++) {
+            isLevelDone = isLevelDone && !bricks[r][c].status;
+        }
+    }
+
+    if (isLevelDone) {
+        win.play();
+
+        if (levels >= max_levels) {
+            showYouWin();
+            game_over = true;
+            return;
+        }
+        brickRowCount++;
+        drawBricks();
+        ball.speed += 0.5;
+        resetBall();
+        levels++;
+    }
 }
 
 function draw() {
@@ -249,31 +337,11 @@ function draw() {
     drawLevels();
     drawSound();
     collisionDetection();
-    if (x + ballRadius > canvas.width || x + dx < ballRadius) {
-        dx = -dx;
-    }
-    if (y + dy < ballRadius) {
-        dy = -dy;
-        wall_hit.play();
-    } else if (y + dy > canvas.height - paddleHeight) {
-        if (x > paddleX + paddleWidth + 2.5 && x < paddleX + paddleWidth + 2.5) {
-            dy = -dy;
-        } else {
-            lives--;
-            life_lost.play();
-            if (!lives) {
-                alert("GAME OVER");
-                document.location.reload();
-            } else {
-                x = canvas.width / 2;
-                y = canvas.height - 30;
-                levels++;
-                dx += 5;
-                dy -= -3;
-                paddleX = (canvas.width - paddleWidth) / 2;
-            }
-        }
-    }
+}
+
+draw();
+
+function movePaddle() {
     if (rightPressed && paddleX + paddleWidth < canvas.width) {
         paddleX += 7;
     } else if (leftPressed && paddleX - 10 > 0) {
@@ -281,10 +349,7 @@ function draw() {
     }
     x += dx;
     y += dy;
-    requestAnimationFrame(draw);
 }
-
-draw();
 
 function update() {
     movePaddle();
